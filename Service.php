@@ -1,16 +1,17 @@
 <?php
 namespace application\plugin\btl
 {
-	use application\plugin\gsrc\GSRCException;
+	use application\plugin\gsrc\GsrcException;
 
 	use application\plugin\btl\BtlException;
+	use application\plugin\btl\BtlRequestObject;
 	use application\plugin\mvcQuery\MvcQueryObject;
 	use nutshell\core\plugin\PluginExtension;
 	use nutshell\core\exception\NutshellException;
 	use nutshell\Nutshell;
 	
 	/**
-	 * Btl - The Batchable Transmission Layer
+	 * BTL - The Batchable Transmission Layer
 	 * Note that all exceptions thrown from this file include error code 1000+
 	 * @throws BtlException
 	 * @author Dean Rather
@@ -39,8 +40,6 @@ namespace application\plugin\btl
 			$data = json_decode($JSON);
 			if(!$data) throw new BtlException(BtlException::INVALID_REQUEST);
 			
-			
-			
 			// Is it a batch of requests?
 			if(is_array($data))
 			{
@@ -64,19 +63,22 @@ namespace application\plugin\btl
 		private function handleRequest($request)
 		{
 			$code = 1;
+			$sequence = 0;
 			$success = 'true';
 			$message = null;
 			$errorCode = null;
+			$call = '';
 			
-			try {
-				// check it is a conforming request
-				$this->checkRequestMetaData($request);
-				
-				list($className, $method) = explode('.', $request->call);
-				
+			try
+			{
+				// Check we've got a conforming request
+				$request = new BtlRequestObject($request);
+				$call = $request->getCall();
+				if(substr_count($call, '.') !== 1) throw new BtlException(BtlException::INVALID_CALL_FORMAT, $request);
+				list($className, $method) = explode('.', $call);
 				$this->checkRequestAPI($className, $method);
-				
 				if(!$this->controllerNamespace) throw new BtlException(BtlException::MUST_SET_NAMESPACE);
+				$sequence = $request->getSequence();
 				
 				// Include the file
 				$filename = APP_HOME._DS_.'controller'._DS_.$this->controllerNamespace._DS_.ucfirst($className).'.php';
@@ -90,22 +92,11 @@ namespace application\plugin\btl
 				// Create a new instance of the class
 				$object = new $class($this->plugin->Mvc);
 				
-				if(isset($request->data) || (isset($request->data) && is_null($request->data))) // call the method on the object, pass it the 'data' from the request
-				{	
-					// Check the method exists
-					if(!method_exists($class, $method))	throw new BtlException(BtlException::CLASS_METHOD_DOESNT_EXIST, $class, $method);
-					
-					$result = $object->$method($request->data);
-				}
-				else if(isset($request->query)) // call the 'query' method on the object
-				{
-					if($method != 'get') throw new BtlException(BtlException::CANT_QUERY_THAT_TYPE, $class, $method, $query);
-					$result = $object->$method($request->query, array('query'=>true));
-				}
-				else
-				{
-					throw new BtlException(BtlException::REQUEST_NEEDS_DATA);
-				}
+				// Check the method exists
+				if(!method_exists($class, $method))	throw new BtlException(BtlException::CLASS_METHOD_DOESNT_EXIST, $class, $method);
+				
+				// Pass the request through to the method on the class
+				$result = $object->$method($request);
 			}
 			catch(NutshellException $exception)
 			{
@@ -119,9 +110,9 @@ namespace application\plugin\btl
 			
 			$response = array
 			(
-				'sequence'	=> isset($request->sequence)?$request->sequence:0,
+				'sequence'	=> $sequence,
 				'timestamp'	=> time(),
-				'call'		=> $request->call,
+				'call'		=> $call,
 				'code'		=> $code,
 				'success'	=> $success,
 				'message'	=> $message,
@@ -136,7 +127,7 @@ namespace application\plugin\btl
 		 */
 		private function respond($data)
 		{
-			echo '<pre>'.print_r($data,1).'</pre>'; exit; // for debug purposes
+			// echo '<pre>'.print_r($data,1).'</pre>'; exit; // for debug purposes
 			$type='json';
 			if ($this->callback)
 			{
@@ -151,35 +142,11 @@ namespace application\plugin\btl
 		}
 		
 		/**
-		 * If your controllers who extend Btl are in \application\controllers\api, then you must pass in 'api'
+		 * If your controllers who extend BTL are in \application\controllers\api, then you must pass in 'api'
 		 */
 		public function setControllerNamespace($namespace=null)
 		{
 			$this->controllerNamespace=$namespace;
-		}
-		
-		/**
-		 * Pass me a request object, And I will throw an error if it does not have conforming meta data
-		 * @param $request request object
-		 * @throws BtlException
-		 */
-		private function checkRequestMetaData($request)
-		{
-			// if(!isset($request->sequence)) throw new BtlException(BtlException::REQUEST_NEEDS_SEQUENCE);
-			// if(!is_int($request->sequence)) throw new BtlException(BtlException::REQUEST_NEEDS_SEQUENCE);
-			// if($request->sequence < 0 ) throw new BtlException(BtlException::REQUEST_NEEDS_SEQUENCE);
-			
-			if(substr_count($request->call, '.') !== 1) throw new BtlException(BtlException::INVALID_CALL_FORMAT, $request);
-			
-			if(!isset($request->timestamp)) throw new BtlException(BtlException::REQUEST_NEEDS_TIMESTAMP);
-			if(!is_numeric($request->timestamp)) throw new BtlException(BtlException::REQUEST_NEEDS_TIMESTAMP);
-			if($request->timestamp < 0 ) throw new BtlException(BtlException::REQUEST_NEEDS_TIMESTAMP);
-			
-			if(!isset($request->call)) throw new BtlException(BtlException::REQUEST_NEEDS_CALL);
-			if(!$request->call) throw new BtlException(BtlException::REQUEST_NEEDS_CALL);
-			
-			if(!isset($request->data) && !isset($request->query)) throw new BtlException(BtlException::REQUEST_NEEDS_DATA);
-			
 		}
 		
 		/**
@@ -189,11 +156,19 @@ namespace application\plugin\btl
 		 */
 		private function checkRequestAPI($className, $method)
 		{
-			$config = Nutshell::getInstance()->config;
-			$api = $config->plugin->Btl;
+			$className = $className;
+			$method = $method;
+			$api = $this->getApi();
 			if(!$api) throw new BtlException(BtlException::API_CONFIG_NOT_CONFIGURED);
-			if(!$api->$className) throw new BtlException(BtlException::API_CLASS_NOT_ALLOWED, $className, $api);
-			if(!in_array($method, $api->$className)) throw new BtlException(BtlException::API_CLASS_METHOD_NOT_ALLOWED, $className, $method, $api);
+			if(!isset($api[$className])) throw new BtlException(BtlException::API_CLASS_NOT_ALLOWED, $className, $api);
+			if(!in_array($method, $api[$className])) throw new BtlException(BtlException::API_CLASS_METHOD_NOT_ALLOWED, $className, $method, $api);
+		}
+		
+		public function getApi()
+		{
+			$config = Nutshell::getInstance()->config;
+			$api = $config->plugin->Btl->toArray();
+			return $api;
 		}
 
 	}

@@ -17,6 +17,7 @@ namespace application\plugin\btl
 		public static function loadDependencies()
 		{
 			require_once(__DIR__._DS_.'BtlException.php');
+			require_once(__DIR__._DS_.'BtlRequestObject.php');
 			require_once(__DIR__._DS_.'Service.php');
 		}
 		

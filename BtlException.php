@@ -21,12 +21,6 @@ namespace application\plugin\btl
 		/** Query must be one of: get, set, remove, check */
 		const INVALID_QUERY_TYPE		= 6;
 		
-		/** The request must contain a 'data' or 'query' part */
-		const REQUEST_NEEDS_DATA		= 7;
-		
-		/** The request must contain a 'sequence' which must be a positive integer */
-		const REQUEST_NEEDS_SEQUENCE	= 8;
-		
 		/** The request must contain a 'timestamp' which must be a positive integer */
 		const REQUEST_NEEDS_TIMESTAMP	= 9;
 		
