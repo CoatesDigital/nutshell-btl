@@ -104,7 +104,7 @@ namespace application\plugin\btl
 				$code = $exception->getCode();
 				$success = 'false';
 				$message = 'request failed';
-				if(NS_ENV=='dev') $message = $exception->getDescription();
+				if(NS_ENV=='dev') $message = $exception->getDescription('array');
 				$result = null;
 			}
 			
