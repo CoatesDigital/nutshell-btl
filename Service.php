@@ -104,7 +104,12 @@ namespace application\plugin\btl
 				$code = $exception->getCode();
 				$success = 'false';
 				$message = 'request failed';
-				if(NS_ENV=='dev') $message = $exception->getDescription('array');
+				
+				$nutshell = Nutshell::getInstance();
+				if($nutshell->config->application->mode=='development')
+				{
+					$message = $exception->getDescription('array');
+				}
 				$result = null;
 			}
 			
