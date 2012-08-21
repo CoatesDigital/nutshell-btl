@@ -62,12 +62,12 @@ namespace application\plugin\btl
 		
 		private function handleRequest($request)
 		{
-			$code = 1;
-			$sequence = 0;
-			$success = 'true';
-			$message = null;
-			$errorCode = null;
-			$call = '';
+			$code		= 1;
+			$sequence	= 0;
+			$success	= true;
+			$message	= null;
+			$errorCode	= null;
+			$call		= '';
 			
 			try
 			{
@@ -101,16 +101,16 @@ namespace application\plugin\btl
 			catch(NutshellException $exception)
 			{
 				$exception->log();
-				$code = $exception->getCode();
-				$success = 'false';
-				$message = 'request failed';
+				$code		= $exception->getCode();
+				$success	= false;
+				$message	= 'request failed';
+				$result		= null;
 				
 				$nutshell = Nutshell::getInstance();
 				if($nutshell->config->application->mode=='development')
 				{
 					$message = $exception->getDescription('array');
 				}
-				$result = null;
 			}
 			
 			$response = array
@@ -132,7 +132,6 @@ namespace application\plugin\btl
 		 */
 		private function respond($data)
 		{
-			// echo '<pre>'.print_r($data,1).'</pre>'; exit; // for debug purposes
 			$type='json';
 			if ($this->callback)
 			{
