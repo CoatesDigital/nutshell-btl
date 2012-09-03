@@ -106,6 +106,7 @@ namespace application\plugin\btl
 				$message	= 'request failed';
 				$result		= null;
 				
+				header('HTTP/1.1 500 Application Error');
 				$nutshell = Nutshell::getInstance();
 				if($nutshell->config->application->mode=='development')
 				{
