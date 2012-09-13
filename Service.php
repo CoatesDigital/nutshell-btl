@@ -109,7 +109,7 @@ namespace application\plugin\btl
 				$nutshell = Nutshell::getInstance();
 				if($nutshell->config->application->mode=='development')
 				{
-					header('HTTP/1.1 500 Application Error');
+					// header('HTTP/1.1 500 Application Error');
 					$message = $exception->getDescription('array');
 				}
 			}
