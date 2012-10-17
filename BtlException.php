@@ -45,6 +45,8 @@ namespace application\plugin\btl
 		/** The "query" block is only available for "get" methods" **/
 		const CANT_QUERY_THAT_TYPE = 17;
 		
+		const REQUEST_FAILED = 18;
+		
 	}
 }
 ?>

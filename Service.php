@@ -175,6 +175,30 @@ namespace application\plugin\btl
 			$api = $config->plugin->Btl->toArray();
 			return $api;
 		}
+		
+		public function request($URL, $command, $data, $query)
+		{
+			$request = array();
+			$request['timestamp']	= 1;
+			$request['data']		= $data;
+			$request['query']		= $query;
+			$request['call']		= $command;
+			$request = json_encode($request);
+			
+			$curl = curl_init();
+			curl_setopt($curl, CURLOPT_URL, $URL);
+			curl_setopt($curl, CURLOPT_POST, 1);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, $request);
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+			$result = curl_exec($curl);
+			curl_close($curl);
+			
+			$result = json_decode($result);
+			if(!$result->success) throw new BtlException(BtlException::REQUEST_FAILED, $result);
+			$result = $result->data;
+			
+			return $result;
+		}
 
 	}
 }
