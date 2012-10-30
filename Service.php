@@ -192,9 +192,11 @@ namespace application\plugin\btl
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 			$result = curl_exec($curl);
 			curl_close($curl);
+			if(!$result) throw new BtlException(BtlException::REQUEST_FAILED, $curl);
 			
 			$result = json_decode($result);
-			if(!$result->success) throw new BtlException(BtlException::REQUEST_FAILED, $result);
+			if(!$result) throw new BtlException(BtlException::REQUEST_FAILED, $curl);
+			if(!$result->success) throw new BtlException(BtlException::REQUEST_FAILED, $result, $curl);
 			$result = $result->data;
 			
 			return $result;
