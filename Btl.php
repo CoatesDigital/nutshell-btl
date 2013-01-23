@@ -14,13 +14,6 @@ namespace application\plugin\btl
 	 */
 	class Btl extends Plugin implements Native, AbstractFactory
 	{
-		public static function loadDependencies()
-		{
-			require_once(__DIR__._DS_.'BtlException.php');
-			require_once(__DIR__._DS_.'BtlRequestObject.php');
-			require_once(__DIR__._DS_.'Service.php');
-		}
-		
 		public static function registerBehaviours(){}
 		
 		public static function runFactory($handler)
