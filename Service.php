@@ -194,7 +194,7 @@ namespace application\plugin\btl
 			curl_close($curl);
 			
 			$result = json_decode($result);
-			if(!$result->success) throw new BtlException(BtlException::REQUEST_FAILED, $result);
+			if(!$result || !$result->success) throw new BtlException(BtlException::REQUEST_FAILED, $result, $URL, $request);
 			$result = $result->data;
 			
 			return $result;
