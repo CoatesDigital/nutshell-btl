@@ -104,7 +104,7 @@ namespace application\plugin\btl
 				$code		= $exception->getCode();
 				$success	= false;
 				$message	= 'request failed';
-				$result		= null;
+				$result		= array();
 				
 				$nutshell = Nutshell::getInstance();
 				if($nutshell->config->application->mode=='development')
