@@ -40,6 +40,8 @@ namespace application\plugin\btl
 			$data = json_decode($JSON);
 			if(!$data) throw new BtlException(BtlException::INVALID_REQUEST);
 			
+			$this->log(">", $data);
+			
 			// Is it a batch of requests?
 			if(is_array($data))
 			{
@@ -54,6 +56,8 @@ namespace application\plugin\btl
 			{
 				$response = $this->handleRequest($data);
 			}
+			
+			$this->log("<", $response);
 			
 			$this->respond($response);
 			exit;
@@ -200,6 +204,70 @@ namespace application\plugin\btl
 			$result = $result->data;
 			
 			return $result;
+		}
+		
+		private function log($message, $objects)
+		{
+			// in php, both arrays and objects can have key->val
+			// in json, arrays cannot have key->val
+			// this'll change the interior "arrays" from the "response" which appear in json as objects, into objects
+			$objects = json_encode($objects);
+			$objects = json_decode($objects);
+			
+			if(is_array($objects))
+			{
+				$tidyObjects = array();
+				foreach($objects as $object)
+				{
+					$tidyObjects[] = $this->tidyObject($object);
+				}
+			}
+			else
+			{
+				$tidyObjects = $this->tidyObject($objects);
+			}
+			
+			$output = json_encode($tidyObjects);
+			
+			// record the user's last activity
+			$userName = "Unknown";
+			if(isset($_SERVER['REMOTE_ADDR'])) $userName = $_SERVER['REMOTE_ADDR'];
+			if(isset($_SERVER['HTTP_X_FORWARDED_FOR'])) $userName = $_SERVER['HTTP_X_FORWARDED_FOR'];
+			if($currentUser = $this->plugin->Auth->getUserID()) {
+				
+				$model = $this->plugin->MvcQuery->getModel('User');
+				$results = $model->read(array('id'=>$currentUser));
+				if(sizeof($results)) $user = $results[0];
+				$userName = $user['email'];
+			}
+			\application\helper\DebugHelper::logToFile('api.log', "$userName: $message $output");
+		}
+		
+		private function tidyObject($object)
+		{
+			$object = (array)$object;
+			$tidyObject = array();
+			$properties = array
+			(
+				'call',
+				'query',
+				'data',
+				'success',
+				'sequence',
+				'timestamp',
+				'code',
+				'message'
+			);
+			
+			foreach($properties as $property)
+			{
+				if(array_key_exists($property, $object))
+				{
+					$tidyObject[$property] = $object[$property];
+				}
+			}
+			if(sizeof($tidyObject) != sizeof($object)) throw new BtlException("Failed to tidy object!", $object, $tidyObject);
+			return $tidyObject;
 		}
 
 	}
