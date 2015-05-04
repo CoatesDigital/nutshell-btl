@@ -240,7 +240,7 @@ namespace application\plugin\btl
 				if(sizeof($results)) $user = $results[0];
 				$userName = $user['email'];
 			}
-			\application\helper\DebugHelper::logToFile('api.log', "$userName: $message $output");
+			\application\helper\DebugHelper::logToFile('api.log', "$userName $message $output");
 		}
 		
 		private function tidyObject($object)
