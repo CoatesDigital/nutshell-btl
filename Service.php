@@ -214,6 +214,11 @@ namespace application\plugin\btl
 			$objects = json_encode($objects);
 			$objects = json_decode($objects);
 			
+			// prevent logging of passwords
+			if (property_exists($objects, "data") && property_exists($objects->data, "password")) {
+				unset($objects->data->password);
+			}
+			
 			if(is_array($objects))
 			{
 				$tidyObjects = array();
