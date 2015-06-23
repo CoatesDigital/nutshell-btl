@@ -215,8 +215,9 @@ namespace application\plugin\btl
 			$objects = json_decode($objects);
 			
 			// prevent logging of passwords
-			if (property_exists($objects, "data") && property_exists($objects->data, "password")) {
-				unset($objects->data->password);
+			// if (property_exists($objects, "data") && property_exists($objects->data, "password")) {
+			if (isset($objects->data) && isset($objects->data->password)) {
+				$objects->data->password = 'privacy blanket';
 			}
 			
 			if(is_array($objects))
