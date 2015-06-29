@@ -243,8 +243,11 @@ namespace application\plugin\btl
 				
 				$model = $this->plugin->MvcQuery->getModel('User');
 				$results = $model->read(array('id'=>$currentUser));
-				if(sizeof($results)) $user = $results[0];
-				$userName = $user['email'];
+				if(sizeof($results))
+				{
+					$user = $results[0];
+					$userName = $user['email'];
+				}
 			}
 			\application\helper\DebugHelper::logToFile('api.log', "$userName $message $output");
 		}
