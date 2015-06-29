@@ -158,6 +158,11 @@ namespace application\plugin\btl
 			$this->controllerNamespace=$namespace;
 		}
 		
+		public function setCallback($callback)
+		{
+			$this->callback = $callback;
+		}
+
 		/**
 		 * Checks this plugin's config
 		 * The user is only allowed to perform operations defined in that configuration.
